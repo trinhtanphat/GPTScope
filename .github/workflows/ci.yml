@@ -47,6 +47,8 @@ jobs:
           rustup target add --toolchain 1.98.1 x86_64-pc-windows-msvc
       - name: Install locked Node dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build static desktop UI
+        run: npm run ui:build
       - name: Generate Tauri icons
         run: npm run tauri:icons
       - name: Rust format
@@ -89,6 +91,8 @@ jobs:
           rustup target add --toolchain 1.98.1 aarch64-apple-darwin x86_64-apple-darwin
       - name: Install locked Node dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build static desktop UI
+        run: npm run ui:build
       - name: Generate Tauri icons
         run: npm run tauri:icons
       - name: Rust format
