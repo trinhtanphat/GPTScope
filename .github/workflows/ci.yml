@@ -34,6 +34,8 @@ jobs:
     name: tauri-windows
     needs: node-test
     runs-on: windows-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.98.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,11 +54,11 @@ jobs:
       - name: Generate Tauri icons
         run: npm run tauri:icons
       - name: Rust format
-        run: cargo +1.98.1 fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
+        run: cargo fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
       - name: Rust check
-        run: cargo +1.98.1 check --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc
+        run: cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc
       - name: Rust clippy
-        run: cargo +1.98.1 clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc --all-targets -- -D warnings
+        run: cargo clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc --all-targets -- -D warnings
       - name: Build unsigned Windows bundles
         run: npm run tauri:win
       - name: Normalize and validate Windows artifacts
@@ -79,6 +81,8 @@ jobs:
     name: tauri-macos
     needs: node-test
     runs-on: macos-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.98.1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -96,11 +100,11 @@ jobs:
       - name: Generate Tauri icons
         run: npm run tauri:icons
       - name: Rust format
-        run: cargo +1.98.1 fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
+        run: cargo fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
       - name: Rust check
-        run: cargo +1.98.1 check --manifest-path apps/tauri/src-tauri/Cargo.toml
+        run: cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
       - name: Rust clippy
-        run: cargo +1.98.1 clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --all-targets -- -D warnings
       - name: Build unsigned universal macOS bundles
         run: npm run tauri:mac
       - name: Normalize and validate macOS artifacts
