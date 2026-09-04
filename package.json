@@ -1,0 +1,14 @@
+{
+  "name": "gptscope",
+  "version": "0.1.0",
+  "description": "Clean-room inspector for authorized ChatGPT Desktop harness evidence",
+  "type": "module",
+  "bin": { "gptscope": "bin/gptscope.mjs" },
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "doctor": "node bin/gptscope.mjs doctor"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["chatgpt", "desktop", "harness", "skills", "mcp", "clean-room", "inspector"]
+}

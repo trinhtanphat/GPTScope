@@ -1,0 +1,6 @@
+node_modules/
+gptscope-workspace/
+gptscope-export/
+.DS_Store
+Thumbs.db
+*.log
