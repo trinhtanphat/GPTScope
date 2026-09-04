@@ -1,0 +1,118 @@
+name: Release v0.2.0
+
+on:
+  push:
+    tags:
+      - v0.2.0
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_TAG: v0.2.0
+
+jobs:
+  verify-source:
+    name: verify exact main source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require exact main SHA and version contract
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          test "$(node -p "require('./package.json').version")" = "0.2.0"
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+          npm run ui:build
+          npm run doctor
+
+  build-windows:
+    name: release windows
+    needs: verify-source
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install Rust and target
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal
+          rustup target add --toolchain 1.98.1 x86_64-pc-windows-msvc
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run tauri:win
+      - name: Normalize release assets
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/release | Out-Null
+          $exe = Get-ChildItem apps/tauri/src-tauri/target -Recurse -File -Filter *.exe | Where-Object { $_.FullName -match '[\\/]bundle[\\/]nsis[\\/]' } | Select-Object -First 1
+          $msi = Get-ChildItem apps/tauri/src-tauri/target -Recurse -File -Filter *.msi | Where-Object { $_.FullName -match '[\\/]bundle[\\/]msi[\\/]' } | Select-Object -First 1
+          if (-not $exe -or -not $msi) { throw 'Missing Windows bundle(s)' }
+          Copy-Item $exe.FullName dist/release/GPTScope-0.2.0-windows-x64-Setup.exe
+          Copy-Item $msi.FullName dist/release/GPTScope-0.2.0-windows-x64.msi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: dist/release/*
+          if-no-files-found: error
+
+  build-macos:
+    name: release macOS
+    needs: verify-source
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install Rust and universal targets
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal
+          rustup target add --toolchain 1.98.1 aarch64-apple-darwin x86_64-apple-darwin
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run tauri:mac
+      - name: Normalize release assets
+        run: |
+          mkdir -p dist/release
+          dmg="$(find apps/tauri/src-tauri/target -path '*/release/bundle/dmg/*.dmg' -type f -size +0c | head -n 1)"
+          app="$(find apps/tauri/src-tauri/target -path '*/release/bundle/macos/*.app' -type d | head -n 1)"
+          test -n "$dmg" && test -n "$app"
+          cp "$dmg" dist/release/GPTScope-0.2.0-macos-universal.dmg
+          ditto -c -k --sequesterRsrc --keepParent "$app" dist/release/GPTScope-0.2.0-macos-universal.app.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: dist/release/*
+          if-no-files-found: error
+
+  publish:
+    name: publish GitHub release
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist/release
+          merge-multiple: true
+      - name: Require all release assets
+        run: |
+          test -s dist/release/GPTScope-0.2.0-windows-x64-Setup.exe
+          test -s dist/release/GPTScope-0.2.0-windows-x64.msi
+          test -s dist/release/GPTScope-0.2.0-macos-universal.dmg
+          test -s dist/release/GPTScope-0.2.0-macos-universal.app.zip
+      - name: Publish non-draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/release/* \
+            --verify-tag \
+            --title "GPTScope v0.2.0" \
+            --notes "GPTScope v0.2.0 adds the native Tauri desktop inspector, deterministic timeline analysis, public openai-docs skill recognition, and cross-platform CI/package gates. Packages are unsigned."

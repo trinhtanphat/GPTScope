@@ -1,4 +1,5 @@
 name: CI
+
 on:
   push:
   pull_request:
@@ -7,7 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  node-test:
+    name: node-test (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -19,6 +21,96 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --package-lock-only --ignore-scripts
-      - run: npm test
-      - run: node bin/gptscope.mjs doctor
+      - name: Install locked Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Node tests
+        run: npm test
+      - name: Build static desktop UI
+        run: npm run ui:build
+      - name: Doctor
+        run: npm run doctor
+
+  tauri-windows:
+    name: tauri-windows
+    needs: node-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install Rust 1.98.1 and Windows target
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+          rustup target add --toolchain 1.98.1 x86_64-pc-windows-msvc
+      - name: Install locked Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate Tauri icons
+        run: npm run tauri:icons
+      - name: Rust format
+        run: cargo +1.98.1 fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
+      - name: Rust check
+        run: cargo +1.98.1 check --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc
+      - name: Rust clippy
+        run: cargo +1.98.1 clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --target x86_64-pc-windows-msvc --all-targets -- -D warnings
+      - name: Build unsigned Windows bundles
+        run: npm run tauri:win
+      - name: Normalize and validate Windows artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/release | Out-Null
+          $exe = Get-ChildItem apps/tauri/src-tauri/target -Recurse -File -Filter *.exe | Where-Object { $_.FullName -match '[\\/]bundle[\\/]nsis[\\/]' } | Select-Object -First 1
+          $msi = Get-ChildItem apps/tauri/src-tauri/target -Recurse -File -Filter *.msi | Where-Object { $_.FullName -match '[\\/]bundle[\\/]msi[\\/]' } | Select-Object -First 1
+          if (-not $exe -or $exe.Length -le 0) { throw 'Missing non-empty NSIS installer' }
+          if (-not $msi -or $msi.Length -le 0) { throw 'Missing non-empty MSI installer' }
+          Copy-Item $exe.FullName dist/release/GPTScope-0.2.0-windows-x64-Setup.exe
+          Copy-Item $msi.FullName dist/release/GPTScope-0.2.0-windows-x64.msi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GPTScope-0.2.0-windows-x64
+          path: dist/release/GPTScope-0.2.0-windows-x64-*
+          if-no-files-found: error
+
+  tauri-macos:
+    name: tauri-macos
+    needs: node-test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install Rust 1.98.1 and universal targets
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+          rustup target add --toolchain 1.98.1 aarch64-apple-darwin x86_64-apple-darwin
+      - name: Install locked Node dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate Tauri icons
+        run: npm run tauri:icons
+      - name: Rust format
+        run: cargo +1.98.1 fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check
+      - name: Rust check
+        run: cargo +1.98.1 check --manifest-path apps/tauri/src-tauri/Cargo.toml
+      - name: Rust clippy
+        run: cargo +1.98.1 clippy --manifest-path apps/tauri/src-tauri/Cargo.toml --all-targets -- -D warnings
+      - name: Build unsigned universal macOS bundles
+        run: npm run tauri:mac
+      - name: Normalize and validate macOS artifacts
+        run: |
+          mkdir -p dist/release
+          dmg="$(find apps/tauri/src-tauri/target -path '*/release/bundle/dmg/*.dmg' -type f -size +0c | head -n 1)"
+          app="$(find apps/tauri/src-tauri/target -path '*/release/bundle/macos/*.app' -type d | head -n 1)"
+          test -n "$dmg" && test -n "$app"
+          cp "$dmg" dist/release/GPTScope-0.2.0-macos-universal.dmg
+          ditto -c -k --sequesterRsrc --keepParent "$app" dist/release/GPTScope-0.2.0-macos-universal.app.zip
+          test -s dist/release/GPTScope-0.2.0-macos-universal.dmg
+          test -s dist/release/GPTScope-0.2.0-macos-universal.app.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GPTScope-0.2.0-macos-universal
+          path: dist/release/GPTScope-0.2.0-macos-universal.*
+          if-no-files-found: error

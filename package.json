@@ -1,14 +1,36 @@
 {
   "name": "gptscope",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Clean-room inspector for authorized ChatGPT Desktop harness evidence",
   "type": "module",
-  "bin": { "gptscope": "bin/gptscope.mjs" },
-  "engines": { "node": ">=22" },
+  "bin": {
+    "gptscope": "bin/gptscope.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "doctor": "node bin/gptscope.mjs doctor"
+    "doctor": "node bin/gptscope.mjs doctor",
+    "ui:build": "node scripts/build-ui.mjs",
+    "tauri": "tauri",
+    "tauri:dev": "npm run ui:build && npm run tauri:icons && tauri dev --config apps/tauri/src-tauri/tauri.conf.json",
+    "tauri:win": "npm run ui:build && npm run tauri:icons && tauri build --config apps/tauri/src-tauri/tauri.conf.json --target x86_64-pc-windows-msvc --bundles nsis,msi",
+    "tauri:mac": "npm run ui:build && npm run tauri:icons && tauri build --config apps/tauri/src-tauri/tauri.conf.json --target universal-apple-darwin --bundles dmg,app",
+    "tauri:icons": "tauri icon assets/gptscope-icon.png --output apps/tauri/src-tauri/icons"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4"
   },
   "license": "Apache-2.0",
-  "keywords": ["chatgpt", "desktop", "harness", "skills", "mcp", "clean-room", "inspector"]
+  "keywords": [
+    "chatgpt",
+    "desktop",
+    "codex",
+    "harness",
+    "skills",
+    "mcp",
+    "clean-room",
+    "inspector"
+  ]
 }

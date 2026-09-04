@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GPTScope",
+  "version": "0.2.0",
+  "identifier": "com.trinhtanphat.gptscope",
+  "build": {
+    "frontendDist": "../../../dist/ui"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "GPTScope",
+        "width": 1380,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 650,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "dmg", "app"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "Clean-room ChatGPT and Codex harness evidence inspector"
+  }
+}

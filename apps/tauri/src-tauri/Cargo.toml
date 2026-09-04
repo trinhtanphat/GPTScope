@@ -1,0 +1,12 @@
+[package]
+name = "gptscope-tauri"
+version = "0.2.0"
+edition = "2024"
+publish = false
+build = "build.rs"
+
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+tauri = "=2.11.5"
+
+[build-dependencies]
+tauri-build = "=2.6.3"

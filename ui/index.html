@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>GPTScope</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Clean-room evidence inspector</p>
+      <h1>GPTScope <span>v0.2.0</span></h1>
+    </div>
+    <div class="boundary">Local analysis only · user-supplied evidence</div>
+  </header>
+
+  <main class="shell">
+    <section class="panel import-panel" aria-labelledby="import-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Evidence</p>
+          <h2 id="import-title">Import a ChatGPT or Codex trace</h2>
+        </div>
+        <label class="surface-field">Surface
+          <select id="surface">
+            <option value="unknown">Auto</option>
+            <option value="chat">Chat</option>
+            <option value="work">Work</option>
+            <option value="codex">Codex</option>
+          </select>
+        </label>
+      </div>
+      <label id="drop-zone" class="drop-zone" tabindex="0">
+        <input id="file-input" type="file" accept=".txt,.jsonl,.json" hidden>
+        <strong>Drop evidence here</strong>
+        <span>or choose a .txt, .jsonl, or .json file · max 16 MiB</span>
+      </label>
+      <p id="status" class="status" role="status">No evidence loaded.</p>
+    </section>
+
+    <section class="summary-grid" aria-label="Analysis summary">
+      <article class="metric"><span>Surface</span><strong id="metric-surface">—</strong></article>
+      <article class="metric"><span>Events</span><strong id="metric-events">0</strong></article>
+      <article class="metric"><span>Findings</span><strong id="metric-findings">0</strong></article>
+      <article class="metric"><span>Known skills</span><strong id="metric-skills">0</strong></article>
+    </section>
+
+    <section class="workspace-grid">
+      <article class="panel timeline-panel">
+        <div class="section-head">
+          <div><p class="eyebrow">Trace</p><h2>Timeline</h2></div>
+        </div>
+        <ol id="timeline" class="timeline"><li class="empty">Import evidence to populate the timeline.</li></ol>
+      </article>
+
+      <aside class="stack">
+        <article class="panel">
+          <div class="section-head"><div><p class="eyebrow">Inference</p><h2>Findings</h2></div></div>
+          <div id="findings" class="findings"><p class="empty">No findings yet.</p></div>
+        </article>
+        <article class="panel inspector-panel">
+          <div class="section-head"><div><p class="eyebrow">Evidence</p><h2>Inspector</h2></div></div>
+          <pre id="inspector">Select a timeline event.</pre>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

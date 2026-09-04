@@ -1,6 +1,9 @@
 node_modules/
+dist/
 gptscope-workspace/
 gptscope-export/
+apps/tauri/src-tauri/target/
+apps/tauri/src-tauri/icons/
 .DS_Store
 Thumbs.db
 *.log

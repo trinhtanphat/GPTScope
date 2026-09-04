@@ -26,13 +26,13 @@ function workspaceArg(args) {
   return resolve(value(args, '--workspace', process.env.GPTSCOPE_WORKSPACE ?? './gptscope-workspace'));
 }
 
-function print(value) {
-  process.stdout.write(JSON.stringify(value, null, 2) + '\n');
+function print(output) {
+  process.stdout.write(JSON.stringify(output, null, 2) + '\n');
 }
 
 function help() {
-  process.stdout.write(`GPTScope v0.1.0\n\n` +
-`Clean-room inspector for authorized ChatGPT Desktop evidence.\n\n` +
+  process.stdout.write(`GPTScope v0.2.0\n\n` +
+`Clean-room inspector for authorized ChatGPT Desktop and Codex evidence.\n\n` +
 `Commands:\n` +
 `  init [workspace]\n` +
 `  session new --workspace DIR --name NAME [--surface chat|work|codex|unknown]\n` +
@@ -55,7 +55,17 @@ async function main() {
   if (!command || command === '--help' || command === '-h' || command === 'help') return help();
 
   if (command === 'doctor') {
-    return print({ ok: true, node: process.version, platform: process.platform, arch: process.arch, cleanRoom: true, surfaces: ['chat', 'work', 'codex', 'unknown'] });
+    return print({
+      ok: true,
+      version: '0.2.0',
+      node: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      cleanRoom: true,
+      desktop: true,
+      surfaces: ['chat', 'work', 'codex', 'unknown'],
+      knownPublicSkills: ['openai-docs']
+    });
   }
 
   if (command === 'init') {
