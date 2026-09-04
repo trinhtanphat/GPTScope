@@ -7,3 +7,4 @@ apps/tauri/src-tauri/icons/
 .DS_Store
 Thumbs.db
 *.log
+assets/gptscope-icon.png

@@ -17,7 +17,9 @@
     "tauri:dev": "npm run ui:build && npm run tauri:icons && tauri dev --config apps/tauri/src-tauri/tauri.conf.json",
     "tauri:win": "npm run ui:build && npm run tauri:icons && tauri build --config apps/tauri/src-tauri/tauri.conf.json --target x86_64-pc-windows-msvc --bundles nsis,msi",
     "tauri:mac": "npm run ui:build && npm run tauri:icons && tauri build --config apps/tauri/src-tauri/tauri.conf.json --target universal-apple-darwin --bundles dmg,app",
-    "tauri:icons": "tauri icon assets/gptscope-icon.png --output apps/tauri/src-tauri/icons"
+    "tauri:icons": "npm run icon:generate && tauri icon assets/gptscope-icon.png --output apps/tauri/src-tauri/icons",
+    "pretest": "node scripts/generate-icon.mjs",
+    "icon:generate": "node scripts/generate-icon.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4"
