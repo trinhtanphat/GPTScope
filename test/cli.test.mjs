@@ -2,11 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const cli = new URL('../bin/gptscope.mjs', import.meta.url).pathname;
+const cli = fileURLToPath(new URL('../bin/gptscope.mjs', import.meta.url));
 const run = (args) => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
+
+test('CLI entry path resolves to a native path', () => {
+  assert.equal(typeof cli, 'string');
+  assert.ok(cli.endsWith(`bin${sep}gptscope.mjs`));
+});
 
 test('CLI supports init, session, import, infer and export smoke flow', async () => {
   const root = await mkdtemp(join(tmpdir(), 'gptscope-cli-'));
